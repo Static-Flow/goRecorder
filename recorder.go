@@ -68,8 +68,13 @@ func main() {
 		if output {
 			for _, picArray := range pics {
 				for index, pic := range picArray {
-					fileName := fmt.Sprintf("%d_%v.png", index, previousNow.Format(time.UnixDate))
-					file, _ := os.Create(fileName)
+					fileName := fmt.Sprintf("%d_%d-%02d-%02dT%02d.%02d.%02d.png",index, 
+        previousNow.Year(), previousNow.Month(), previousNow.Day(),
+        previousNow.Hour(), previousNow.Minute(), previousNow.Second())
+					file, err := os.Create(fileName)
+					if err != nil {
+						panic(err)
+					}
 					defer file.Close()
 					png.Encode(file, pic)
 				}
