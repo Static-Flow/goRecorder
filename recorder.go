@@ -51,7 +51,7 @@ func main() {
 		getScreenInfo()
 	} else{
 		var pics [][]*image.RGBA
-		n := splitScreens(*screenPtr)
+		numberOfScreens := splitScreens(*screenPtr)
 		ticker := time.NewTicker(time.Duration(*pollingPtr) * time.Second)
 		defer ticker.Stop()
 		finished := make(chan bool)
@@ -96,7 +96,7 @@ func main() {
 			if output {
 				for _, picArray := range pics {
 					for index, pic := range picArray {
-						fileName := fmt.Sprintf("%d_%d-%02d-%02dT%02d.%02d.%02d.png",index, 
+						fileName := fmt.Sprintf("%d_%d-%02d-%02dT%02d.%02d.%02d.png",numberOfScreens[index], 
 	        			previousNow.Year(), previousNow.Month(), previousNow.Day(),
 				        previousNow.Hour(), previousNow.Minute(), previousNow.Second())
 						file, err := os.Create(fileName)
@@ -117,8 +117,8 @@ func main() {
 						previousNow = t
 						fmt.Println("Current time: ", t.UTC().Format(time.UnixDate))
 						var screenPics []*image.RGBA
-						for i := 0; i < len(n); i++ {
-				 			bounds := screenshot.GetDisplayBounds(n[i])
+						for i := 0; i < len(numberOfScreens); i++ {
+				 			bounds := screenshot.GetDisplayBounds(numberOfScreens[i])
 
 					 		img, err := screenshot.CaptureRect(bounds)
 					 		if err != nil {
