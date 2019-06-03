@@ -33,6 +33,9 @@ func splitScreens(ids string) []int {
 		if err != nil {
 			panic(err)
 		}
+		if j < 0 || j > screenshot.NumActiveDisplays() {
+			continue
+		}
 		idIntList = append(idIntList, j)
 	}
 	return idIntList
