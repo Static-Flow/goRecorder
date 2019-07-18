@@ -13,6 +13,11 @@ import (
 	"time"
 )
 
+type capture struct {
+	screenshots []*image.RGBA
+	timestamp   time.Time
+}
+
 func reset() {
 	term.Sync()
 }
@@ -61,7 +66,7 @@ func main() {
 	if *listScreensPtr {
 		getScreenInfo()
 	} else {
-		var pics [][]*image.RGBA
+		captures := make([]capture, 0)
 		numberOfScreens := splitScreens(*screenPtr)
 		if len(numberOfScreens) == 0 {
 			fmt.Println("you must provide at least 1 screen using --screenIds for capture to work properly. " +
@@ -72,7 +77,6 @@ func main() {
 			finished := make(chan bool)
 			pause := false
 			output := false
-			previousNow := time.Now()
 			err := term.Init()
 			if err != nil {
 				panic(err)
@@ -109,17 +113,17 @@ func main() {
 			}()
 			for {
 				if output {
-					for _, picArray := range pics {
-						for index, pic := range picArray {
+					for _, c := range captures {
+						for index, pic := range c.screenshots {
 							fileName := fmt.Sprintf("%d_%d-%02d-%02dT%02d.%02d.%02d.png", numberOfScreens[index],
-								previousNow.Year(), previousNow.Month(), previousNow.Day(),
-								previousNow.Hour(), previousNow.Minute(), previousNow.Second())
+								c.timestamp.Year(), c.timestamp.Month(), c.timestamp.Day(),
+								c.timestamp.Hour(), c.timestamp.Minute(), c.timestamp.Second())
 							file, err := os.Create(fileName)
 							if err != nil {
 								panic(err)
 							}
-							defer file.Close()
 							png.Encode(file, pic)
+							file.Close()
 						}
 					}
 					output = false
@@ -129,9 +133,9 @@ func main() {
 						ticker.Stop()
 						return
 					case t := <-ticker.C:
-						previousNow = t
 						fmt.Println("Current time: ", t.UTC().Format(time.UnixDate))
 						var screenPics []*image.RGBA
+
 						for i := 0; i < len(numberOfScreens); i++ {
 							bounds := screenshot.GetDisplayBounds(numberOfScreens[i])
 
@@ -141,10 +145,11 @@ func main() {
 							}
 							screenPics = append(screenPics, img)
 						}
-						if len(pics) == *bufferSizePtr {
-							pics = pics[1:]
+						if len(captures) == *bufferSizePtr {
+							captures = captures[1:]
 						}
-						pics = append(pics, screenPics)
+						c := capture{screenshots: screenPics, timestamp: t}
+						captures = append(captures, c)
 					}
 				}
 			}
